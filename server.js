@@ -3,33 +3,38 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
-// ==========================\ DATA LOGIC
+
 let weatherData = require('./data/weather.json');
 
-let Forecast = weatherData.map(wd => {
-    const dataModel = {
-        city_name: wd.city_name,
-        forecast_dates: wd.data.map((d) => {
-            let weather_obj = {
-                date: d.valid_date,
-                sunrise: d.sunrise_ts,
-                sunset: d.sunset_ts,
-                precip: d.precip,
-                max_temp: d.max_temp,
-                min_temp: d.min_temp,
-                temp_now: d.temp,
-                description: d.weather.description
-            };
+const Forecast = (lat, lon, cityName) => {
+    let temp = weatherData.map(wd => {
+        const dataModel = {
+            city_name: wd.city_name,
+            lat: wd.lat,
+            lon: wd.lon,
+            country_code: wd.country_code,
+            timezone: wd.timezone,
+            forecast_dates: wd.data.map((d) => {
+                let weather_obj = {
+                    date: d.valid_date,
+                    sunrise: d.sunrise_ts,
+                    sunset: d.sunset_ts,
+                    precip: d.precip,
+                    max_temp: d.max_temp,
+                    min_temp: d.min_temp,
+                    temp_now: d.temp,
+                    description: d.weather.description
+                };
 
-            return weather_obj;
-        })
-    }
+                return weather_obj;
+            })
+        }
 
-    return dataModel;
-});
-// ==========================/
+        return dataModel;
+    })
 
-
+    return temp;
+}
 
 const app = express();
 
@@ -38,38 +43,8 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (request, response) => {
-    // let goodByeMsg = { message: "Goodbye World" };
-
-    const availableCities = weatherData.map((data) => {
-
-        const dataModel = {
-            city_name: data.city_name,
-            time_zone: data.timezone,
-            country_code: data.country_code,
-            weather_data: {
-                dates: data.data.map((d) => {
-                    let weather_obj = {
-                        date: d.valid_date,
-                        sunrise_ts: d.sunrise_ts,
-                        sunset_ts: d.sunset_ts,
-                        precip: d.precip,
-                        max_temp: d.max_temp,
-                        min_temp: d.min_temp,
-                        temp: d.temp,
-                        description: d.weather.description
-                    };
-
-                    return weather_obj;
-                })
-            }
-        }
-
-        return dataModel;
-    });
-
-    // response.json(weatherData);
-    // response.json(availableCities);
-    response.json(Forecast);
+    let goodByeMsg = { message: "Goodbye World" };
+    response.json(goodByeMsg);
 });
 
 app.get('/broken', (request, response) => {
@@ -95,7 +70,8 @@ app.get("/weather", (request, response) => {
         return response.status(400).json({ error: "lat, lon, and searchQuery are required parameters" });
     }
 
-    let foundCity = weatherData.find(city => {
+    let findCity = Forecast(lat, lon, query);
+    let foundCity = findCity.find(city => {
         return (
             city.lat === lat ||
             city.lon === lon ||
@@ -103,7 +79,7 @@ app.get("/weather", (request, response) => {
         );
     });
 
-    response.json(foundCity)
+    response.json(foundCity);
 });
 
 app.get("*", (request, response) => {
