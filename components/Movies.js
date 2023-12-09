@@ -28,7 +28,7 @@ class Movies {
                     summary: e.overview,
                     date: e.realease_date,
                     rating: e.popularity,
-                    img: e.poster_path
+                    img: `https://image.tmdb.org/t/p/w200${e.poster_path}`
                 }
             });
 
