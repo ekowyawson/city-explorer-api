@@ -1,15 +1,17 @@
 'use strict';
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
-
-const Forecast = require('./components/Weather');
-const Movies = require('./components/Movies');
+const Forecast = require('./modules/Forecast');
+const Movies = require('./modules/Movies');
+const weatherHandler = require('./modules/weatherHandler');
 const weatherData = require('./data/weather.json');
 
+require("dotenv").config();
 const TMDB_API = process.env.TMDB_API_KEY;
 const PORT = process.env.PORT || 3000;
 const app = express();
+
+
 app.use(cors());
 
 
@@ -31,7 +33,6 @@ app.get("/weather", (request, response) => {
     let lon = request.query.lon;
     let searchQuery = request.query.searchQuery;
 
-    // Check for null or undefined values for lat, lon, and searchQuery
     if (
         lat == null
         || lon == null
@@ -42,11 +43,13 @@ app.get("/weather", (request, response) => {
     ) {
         return response.status(400).json({ error: "lat, lon, and searchQuery are required parameters" });
     }
-
     // ============ Creating an instance of Forecast ================
     let findCity = new Forecast(lat, lon, searchQuery, weatherData);
     response.json(findCity.getWeatherData());
 });
+
+
+app.get("/weather/:city", weatherHandler);
 
 
 app.get("/movies/:page", (request, response) => {
@@ -61,11 +64,9 @@ app.get("/movies/:page", (request, response) => {
 
     movies.getMovies()
     .then(data => {
-        // Handle the result here
         response.json(data);
       })
       .catch(error => {
-        // Handle errors here
         console.error("Error:", error);
         return response.status(400).json({ error: `ERROR: There was an error: ${error}.` });
       });
